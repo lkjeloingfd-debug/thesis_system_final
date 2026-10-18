@@ -5,6 +5,8 @@ name = "pypi"
 
 [packages]
 django = "*"
+dj-database-url = "<3.0,>=2.3"
+psycopg = {extras = ["binary"], version = "<4.0,>=3.2"}
 
 [dev-packages]
 
