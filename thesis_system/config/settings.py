@@ -109,13 +109,17 @@ if DATABASE_URL:
             ssl_require=True,
         )
     }
-else:
+elif DEBUG:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
+else:
+    raise ImproperlyConfigured(
+        "DATABASE_URL must be configured for production."
+    )
 
 
 # Password validation
