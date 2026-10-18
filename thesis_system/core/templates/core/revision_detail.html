@@ -1,0 +1,29 @@
+{% extends "core/base.html" %}
+{% block title %}Revision Details | Thesis Management System{% endblock %}
+{% block content %}
+<div class="header-top" style="margin-bottom:18px"><div><h1>Revision: {{ revision.section }}</h1><p class="page-intro">{{ revision.student.full_name }} · {{ revision.get_status_display }}</p></div><a class="button secondary" href="{% url 'revision_list' %}">Back to revisions</a></div>
+<div class="two-col">
+    <section class="card">
+        <div class="detail-row"><strong>Defense</strong><span><a href="{% url 'defense_detail' revision.defense.pk %}">{{ revision.defense }}</a></span></div>
+        <div class="detail-row"><strong>Required change</strong><span>{{ revision.required_change|linebreaksbr }}</span></div>
+        <div class="detail-row"><strong>Reason</strong><span>{{ revision.reason|default:"—"|linebreaksbr }}</span></div>
+        <div class="detail-row"><strong>Requested by</strong><span>{{ revision.requested_by.username }}</span></div>
+        <div class="detail-row"><strong>Deadline</strong><span>{{ revision.deadline|default:"No deadline" }}</span></div>
+        <div class="detail-row"><strong>Priority</strong><span>{{ revision.get_priority_display }}</span></div>
+        <div class="detail-row"><strong>Status</strong><span class="status">{{ revision.get_status_display }}</span></div>
+        {% if revision.student_response %}<h3>Student response</h3><p>{{ revision.student_response|linebreaksbr }}</p>{% endif %}
+        {% if revision.revised_file %}<p><a href="{{ revision.revised_file.url }}" target="_blank" rel="noopener">Open revised document</a></p>{% endif %}
+    </section>
+    <section>
+        {% if can_submit and revision.status != "APPROVED" %}<div class="card"><h2>Submit revised work</h2>
+            <form method="post" enctype="multipart/form-data" action="{% url 'revision_submit' revision.pk %}">{% csrf_token %}
+                {% for field in form %}<div class="field"><label>{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="errors">{{ error }}</div>{% endfor %}</div>{% endfor %}
+                <button class="button" type="submit">Send for verification</button>
+            </form>
+        </div>{% endif %}
+        {% if can_verify and revision.status == "SUBMITTED" %}<div class="card"><h2>Verify revision</h2><p>Approve the requested change or return it for more work.</p>
+            <form method="post" action="{% url 'revision_verify' revision.pk %}">{% csrf_token %}<button class="button" name="decision" value="APPROVED" type="submit">Approve revision</button> <button class="button secondary" name="decision" value="RETURNED" type="submit">Return for changes</button></form>
+        </div>{% endif %}
+    </section>
+</div>
+{% endblock %}

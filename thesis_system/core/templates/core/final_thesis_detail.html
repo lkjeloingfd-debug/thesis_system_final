@@ -1,0 +1,37 @@
+{% extends "core/base.html" %}
+{% block title %}Final Thesis | Thesis Management System{% endblock %}
+{% block content %}
+<div class="header-top" style="margin-bottom:18px"><div><h1>{{ thesis.title }}</h1><p class="page-intro">Final thesis and repository approval workflow.</p></div><div class="actions">{% if can_edit %}<a class="button" href="{% url 'final_thesis_edit' thesis.pk %}">Edit draft</a>{% endif %}<a class="button secondary" href="{% url 'repository_list' %}">Back to repository</a></div></div>
+<div class="two-col">
+    <section class="card">
+        <div class="detail-row"><strong>Student</strong><span><a href="{% url 'student_detail' thesis.student.pk %}">{{ thesis.student.full_name }}</a></span></div>
+        <div class="detail-row"><strong>Related topic</strong><span><a href="{% url 'topic_detail' thesis.proposal.topic.pk %}">{{ thesis.proposal.topic.title }}</a></span></div>
+        <div class="detail-row"><strong>Proposal</strong><span><a href="{% url 'proposal_detail' thesis.proposal.pk %}">Version {{ thesis.proposal.version }} · {{ thesis.proposal.get_status_display }}</a></span></div>
+        <div class="detail-row"><strong>Status</strong><span class="status">{{ thesis.get_status_display }}</span></div>
+        <div class="detail-row"><strong>Access level</strong><span>{{ thesis.get_access_level_display }}</span></div>
+        <div class="detail-row"><strong>Research area</strong><span>{{ thesis.research_area|default:thesis.proposal.topic.research_area }}</span></div>
+        <div class="detail-row"><strong>Keywords</strong><span>{{ thesis.keywords|default:"—" }}</span></div>
+        <div class="detail-row"><strong>Adviser approval</strong><span>{{ thesis.adviser_approved|yesno:"Approved,Pending" }}</span></div>
+        <div class="detail-row"><strong>Panel approval</strong><span>{{ thesis.panel_approved|yesno:"Approved,Pending" }}</span></div>
+        <h3 style="margin-top:20px">Abstract</h3><p>{{ thesis.abstract|default:"No abstract entered."|linebreaksbr }}</p>
+        {% if can_download and thesis.final_pdf %}<p><a class="button" href="{% url 'repository_download' thesis.pk %}">Download final PDF</a></p>{% endif %}
+        
+    </section>
+    <section class="card">
+        <h2>Workflow actions</h2>
+        {% if can_submit and thesis.status == "DRAFT" %}<form method="post" enctype="multipart/form-data" action="{% url 'final_thesis_action' thesis.pk %}">{% csrf_token %}<button class="button" name="action" value="submit" type="submit">Submit for validation</button></form><p class="muted">The final PDF, approval form, completed final defense, passing evaluation, and approved revisions are required before submission.</p>{% endif %}
+        {% if thesis.status == "SUBMITTED" and can_record_adviser_approval %}
+            <form method="post" action="{% url 'final_thesis_action' thesis.pk %}" style="margin-bottom:10px">{% csrf_token %}<button class="button secondary" name="action" value="adviser_approve" type="submit">Record adviser approval</button></form>
+        {% endif %}
+        {% if thesis.status == "SUBMITTED" and can_record_panel_approval %}
+            <form method="post" action="{% url 'final_thesis_action' thesis.pk %}" style="margin-bottom:10px">{% csrf_token %}<button class="button secondary" name="action" value="panel_approve" type="submit">Record panel approval</button></form>
+        {% endif %}
+        {% if can_manage and thesis.status == "SUBMITTED" %}
+            <form method="post" action="{% url 'final_thesis_action' thesis.pk %}" style="margin-bottom:10px">{% csrf_token %}<button class="button" name="action" value="approve" type="submit">Validate and approve final thesis</button></form>
+        {% endif %}
+        {% if can_manage and thesis.status == "APPROVED" %}<form method="post" action="{% url 'final_thesis_action' thesis.pk %}">{% csrf_token %}<button class="button" name="action" value="archive" type="submit">Archive in repository</button></form>{% endif %}
+        {% if thesis.status == "ARCHIVED" %}<p>The thesis is archived{% if thesis.archived_at %} on {{ thesis.archived_at }}{% endif %}.</p>{% endif %}
+        <p class="muted">Archiving is blocked until the record is approved. Approval requires adviser approval, panel approval, all student revision requests approved, and a passing defense decision.</p>
+    </section>
+</div>
+{% endblock %}

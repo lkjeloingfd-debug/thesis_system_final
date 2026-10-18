@@ -1,0 +1,63 @@
+{% extends "core/base.html" %}
+{% block title %}{{ page_title }} | Thesis Management System{% endblock %}
+{% block content %}
+<div class="header-top" style="margin-bottom:18px">
+    <div><h1>{{ page_title }}</h1><p class="page-intro">{{ description }}</p></div>
+    {% if create_url %}<a class="button" href="{% url create_url %}">+ {{ create_label }}</a>{% endif %}
+</div>
+{% if page_title == "Students" %}
+<div class="card">
+    <!-- GET means search choices become URL parameters and do not change stored data. -->
+    <form method="get" class="grid">
+        <div><label for="q">Search name/number</label><input id="q" name="q" value="{{ query }}" placeholder="Name or student number"></div>
+        <div><label for="program">Program</label><select id="program" name="program"><option value="">All programs</option>{% for item in programs %}<option value="{{ item }}" {% if program == item %}selected{% endif %}>{{ item }}</option>{% endfor %}</select></div>
+        <div><label for="year_level">Year level</label><select id="year_level" name="year_level"><option value="">All years</option>{% for year in "123456" %}<option value="{{ year }}" {% if year_level == year %}selected{% endif %}>Year {{ year }}</option>{% endfor %}</select></div>
+        <div><label for="status">Status</label><select id="status" name="status"><option value="active" {% if status == "active" %}selected{% endif %}>Active</option><option value="inactive" {% if status == "inactive" %}selected{% endif %}>Inactive</option><option value="all" {% if status == "all" %}selected{% endif %}>All</option></select></div>
+        <div class="actions" style="align-self:end;margin-bottom:13px"><button class="button" type="submit">Filter</button><a class="button secondary" href="{% url 'student_list' %}">Clear</a></div>
+    </form>
+</div>
+{% elif page_title == "Thesis Topics" %}
+<div class="card">
+    <form method="get" class="grid">
+        <div><label>Title/student search</label><input type="search" name="q" value="{{ query }}" placeholder="Title, name, or student number"></div>
+        <div><label>Research area</label><input name="area" value="{{ area }}" placeholder="Cybersecurity, IS, networking..."></div>
+        <div><label>Program</label><select name="program"><option value="">All programs</option>{% for item in programs %}<option value="{{ item }}" {% if program == item %}selected{% endif %}>{{ item }}</option>{% endfor %}</select></div>
+        <div><label>Year level</label><select name="year"><option value="">All years</option>{% for y in "123456" %}<option value="{{ y }}" {% if year == y %}selected{% endif %}>Year {{ y }}</option>{% endfor %}</select></div>
+        <div><label>Status</label><select name="status"><option value="">All statuses</option>{% for value,label in topic_statuses %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="actions" style="align-self:end;margin-bottom:13px"><button class="button" type="submit">Filter</button><a class="button secondary" href="{% url 'topic_list' %}">Clear</a></div>
+    </form>
+</div>
+{% elif page_title == "Thesis Repository" %}
+<div class="card">
+    <!-- These filters search the archive metadata; none of them change saved records. -->
+    <form method="get" class="grid">
+        <div><label for="repo-q">Title, author, student number, keyword, or adviser</label><input id="repo-q" name="q" value="{{ query }}" placeholder="Search repository"></div>
+        <div><label for="repo-program">Program</label><select id="repo-program" name="program"><option value="">All programs</option>{% for item in programs %}<option value="{{ item }}" {% if program == item %}selected{% endif %}>{{ item }}</option>{% endfor %}</select></div>
+        <div><label for="repo-area">Research area</label><select id="repo-area" name="area"><option value="">All areas</option>{% for item in areas %}<option value="{{ item }}" {% if area == item %}selected{% endif %}>{{ item }}</option>{% endfor %}</select></div>
+        <div><label for="repo-adviser">Adviser</label><input id="repo-adviser" name="adviser" value="{{ adviser }}" placeholder="Adviser name"></div>
+        <div><label for="repo-year">Archive year</label><select id="repo-year" name="year"><option value="">All years</option>{% for item in archive_years %}<option value="{{ item }}" {% if year == item|stringformat:"s" %}selected{% endif %}>{{ item }}</option>{% endfor %}</select></div>
+        <div class="actions" style="align-self:end;margin-bottom:13px"><button class="button" type="submit">Filter</button><a class="button secondary" href="{% url 'repository_list' %}">Clear</a></div>
+    </form>
+</div>
+{% else %}
+<div class="card">
+    <form method="get" class="actions"><input style="max-width:420px" type="search" name="q" value="{{ request.GET.q }}" placeholder="Search this module where supported"><button class="button" type="submit">Search</button>{% if request.GET.q %}<a class="button secondary" href="{{ request.path }}">Clear</a>{% endif %}</form>
+</div>
+{% endif %}
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Record</th>{% for heading in headers %}<th>{{ heading }}</th>{% endfor %}<th>Actions</th></tr></thead>
+            <tbody>
+            {% for row in rows %}
+                <tr>
+                    <td>{% if row.url %}<a href="{{ row.url }}"><strong>{{ row.primary }}</strong></a>{% else %}<strong>{{ row.primary }}</strong>{% endif %}</td>
+                    {% for cell in row.cells %}<td>{{ cell|default:"—" }}</td>{% endfor %}
+                    <td><div class="actions">{% if row.url %}<a href="{{ row.url }}">View</a>{% endif %}{% for action in row.actions %}<a href="{{ action.url }}">{{ action.label }}</a>{% endfor %}</div></td>
+                </tr>
+            {% empty %}<tr><td colspan="{{ headers|length|add:2 }}" class="muted">{{ empty_message }}</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

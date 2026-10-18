@@ -1,0 +1,33 @@
+{% extends "core/base.html" %}
+{% block title %}Dashboard | Thesis Management System{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+<p class="page-intro">A summary of the thesis workflow, from student registration to repository archiving.</p>
+<div class="grid">
+    <div class="metric"><span>Active students</span><strong>{{ total_students }}</strong></div>
+    <div class="metric"><span>Active advisers</span><strong>{{ total_advisers }}</strong></div>
+    <div class="metric"><span>Topics pending review</span><strong>{{ topics_pending }}</strong></div>
+    <div class="metric"><span>Proposals in progress</span><strong>{{ proposals_pending }}</strong></div>
+    <div class="metric"><span>Upcoming defenses</span><strong>{{ upcoming_defenses }}</strong></div>
+    <div class="metric"><span>Revisions not approved</span><strong>{{ revisions_pending }}</strong></div>
+    <div class="metric"><span>Approved final theses</span><strong>{{ completed_theses }}</strong></div>
+    <div class="metric"><span>Archived theses</span><strong>{{ archived_theses }}</strong></div>
+</div>
+<div class="two-col" style="margin-top:20px">
+    <section class="card">
+        <h2>Workflow shortcuts</h2>
+        <p class="muted">Each module reuses records from the previous step instead of working separately.</p>
+        <div class="actions">
+            <a class="button" href="{% url 'student_create' %}">Register student</a>
+            <a class="button secondary" href="{% url 'topic_create' %}">Propose topic</a>
+            <a class="button secondary" href="{% url 'defense_create' %}">Schedule defense</a>
+            <a class="button secondary" href="{% url 'revision_create' %}">Request revision</a>
+        </div>
+    </section>
+    <section class="card">
+        <h2>Unread notifications</h2>
+        {% for notice in recent_notifications %}<p>• <a href="{{ notice.target_url|default:'#' }}">{{ notice.message }}</a></p>{% empty %}<p class="muted">You have no unread notifications.</p>{% endfor %}
+        <a href="{% url 'notifications' %}">View all notifications →</a>
+    </section>
+</div>
+{% endblock %}

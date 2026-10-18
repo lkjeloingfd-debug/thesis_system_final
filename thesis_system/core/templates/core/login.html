@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#234b3a">
+    <title>Log in | Thesis Management System</title>
+    <style>
+        :root {
+            --green: #234b3a;
+            --green-soft: #315f49;
+            --beige: #f4f0e5;
+            --paper: #fffdf8;
+            --line: #ded8c9;
+            --ink: #252b27;
+            --muted: #68716b;
+        }
+        * { box-sizing: border-box; }
+        body {
+            display: grid;
+            min-height: 100vh;
+            margin: 0;
+            padding: 24px 14px;
+            place-items: center;
+            color: var(--ink);
+            background: var(--beige);
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.55;
+        }
+        .login {
+            width: min(100%, 430px);
+            padding: clamp(22px, 5vw, 34px);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: var(--paper);
+            box-shadow: 0 14px 42px rgba(35, 75, 58, 0.1);
+        }
+        h1 { margin: 0 0 8px; color: var(--green); font-size: clamp(1.5rem, 5vw, 1.9rem); line-height: 1.2; }
+        p { overflow-wrap: anywhere; }
+        .muted { color: var(--muted); }
+        label { display: block; margin: 15px 0 5px; font-size: 0.9rem; font-weight: 700; }
+        input { width: 100%; min-width: 0; padding: 11px; border: 1px solid #c9c5b9; border-radius: 6px; font: inherit; }
+        input:focus-visible, button:focus-visible { outline: 3px solid #9bc5a7; outline-offset: 2px; }
+        .button { width: 100%; min-height: 44px; margin-top: 18px; padding: 11px; border: 0; border-radius: 7px; color: #fff; background: var(--green); font: inherit; cursor: pointer; }
+        .button:hover { background: var(--green-soft); }
+        .errorlist { padding-left: 18px; color: #a12626; }
+        code { white-space: normal; overflow-wrap: anywhere; }
+    </style>
+</head>
+<body>
+    <main class="login">
+        <h1>Thesis Management System</h1>
+        <p class="muted">Sign in using your system account.</p>
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}<p class="errorlist">{{ error }}</p>{% endfor %}
+            {% endfor %}
+            {% if form.non_field_errors %}<div class="errorlist">{{ form.non_field_errors }}</div>{% endif %}
+            <button class="button" type="submit">Log in</button>
+        </form>
+        <p class="muted" style="font-size:12px">The initial administrator account is created by running <code>python manage.py createsuperuser</code> in the terminal.</p>
+    </main>
+</body>
+</html>

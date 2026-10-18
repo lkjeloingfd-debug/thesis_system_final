@@ -1,0 +1,23 @@
+{% extends "core/base.html" %}
+{% block title %}Reports | Thesis Management System{% endblock %}
+{% block content %}
+<h1>Reports</h1><p class="page-intro">Live summaries calculated from current database records.</p>
+<div class="grid">
+    <div class="metric"><span>Active students without adviser</span><strong>{{ students_without_adviser }}</strong></div>
+    <div class="metric"><span>Approved topics</span><strong>{{ approved_topics }}</strong></div>
+    <div class="metric"><span>Pending topics</span><strong>{{ pending_topics }}</strong></div>
+    <div class="metric"><span>Pending proposals</span><strong>{{ pending_proposals }}</strong></div>
+    <div class="metric"><span>Upcoming defenses</span><strong>{{ upcoming_defenses }}</strong></div>
+    <div class="metric"><span>Completed defenses</span><strong>{{ completed_defenses }}</strong></div>
+    <div class="metric"><span>Revisions pending</span><strong>{{ revisions_pending }}</strong></div>
+    <div class="metric"><span>Archived theses</span><strong>{{ archived_theses }}</strong></div>
+</div>
+<div class="two-col" style="margin-top:18px">
+    <section class="card"><h2>Adviser workload</h2><div class="table-wrap"><table><thead><tr><th>Adviser</th><th>Advisees</th><th>Maximum</th><th>Available</th></tr></thead><tbody>{% for row in adviser_workload %}<tr><td><a href="{% url 'adviser_detail' row.adviser.pk %}">{{ row.adviser }}</a></td><td>{{ row.advisees }}</td><td>{{ row.maximum }}</td><td>{{ row.available }}</td></tr>{% empty %}<tr><td colspan="4">No advisers registered.</td></tr>{% endfor %}</tbody></table></div></section>
+    <section class="card"><h2>Topics by research area</h2><div class="table-wrap"><table><thead><tr><th>Research area</th><th>Topics</th></tr></thead><tbody>{% for group in topics_by_area %}<tr><td>{{ group.research_area }}</td><td>{{ group.total }}</td></tr>{% empty %}<tr><td colspan="2">No topics submitted yet.</td></tr>{% endfor %}</tbody></table></div></section>
+</div>
+
+<div class="card"><h2>Official defense decisions</h2><div class="table-wrap"><table><thead><tr><th>Decision</th><th>Number of defenses</th></tr></thead><tbody>{% for result in defense_results %}<tr><td>{{ result.final_decision }}</td><td>{{ result.total }}</td></tr>{% empty %}<tr><td colspan="2">No official decisions have been finalized yet.</td></tr>{% endfor %}</tbody></table></div></div>
+
+<div class="card"><h2>Most accessed archived theses</h2><div class="table-wrap"><table><thead><tr><th>Thesis</th><th>Accesses recorded</th></tr></thead><tbody>{% for thesis in most_accessed %}<tr><td><a href="{% url 'final_thesis_detail' thesis.pk %}">{{ thesis.title }}</a></td><td>{{ thesis.access_count }}</td></tr>{% empty %}<tr><td colspan="2">No archived thesis access has been recorded.</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

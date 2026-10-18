@@ -1,0 +1,6 @@
+{% extends "core/base.html" %}
+{% block title %}Notifications | Thesis Management System{% endblock %}
+{% block content %}
+<h1>Notifications</h1><p class="page-intro">System updates related to topic reviews, proposal reviews, panel assignments, and revisions.</p>
+<div class="card">{% for notice in notifications %}<div style="display:flex;justify-content:space-between;gap:14px;align-items:start;border-bottom:1px solid var(--line);padding:13px 0"><div><p style="margin:0 0 5px">{% if not notice.is_read %}<strong>NEW · </strong>{% endif %}{{ notice.message }}</p><small class="muted">{{ notice.created_at }}</small>{% if notice.target_url %}<p><a href="{{ notice.target_url }}">Open related record</a></p>{% endif %}</div>{% if not notice.is_read %}<form method="post" action="{% url 'notification_read' notice.pk %}">{% csrf_token %}<button class="button small secondary" type="submit">Mark read</button></form>{% endif %}</div>{% empty %}<p class="muted">No notifications yet.</p>{% endfor %}</div>
+{% endblock %}

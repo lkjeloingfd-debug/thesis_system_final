@@ -1,0 +1,30 @@
+{% extends "core/base.html" %}
+{% block title %}Topic Review | Thesis Management System{% endblock %}
+{% block content %}
+<div class="header-top" style="margin-bottom:18px"><div><h1>{{ topic.title }}</h1><p class="page-intro">Topic submission, similarity hints, and review history.</p></div><div class="actions">{% if can_edit %}<a class="button" href="{% url 'topic_edit' topic.pk %}">Edit topic</a>{% endif %}<a class="button secondary" href="{% url 'topic_list' %}">Back to topics</a></div></div>
+<div class="two-col">
+    <section class="card">
+        <div class="detail-row"><strong>Student</strong><span><a href="{% url 'student_detail' topic.student.pk %}">{{ topic.student.full_name }}</a> · {{ topic.student.student_number }}</span></div>
+        <div class="detail-row"><strong>Research area</strong><span>{{ topic.research_area }}</span></div>
+        <div class="detail-row"><strong>Technology</strong><span>{{ topic.proposed_technology|default:"—" }}</span></div>
+        <div class="detail-row"><strong>Status</strong><span class="status">{{ topic.get_status_display }}</span></div>
+        <h3 style="margin-top:20px">Background</h3><p>{{ topic.background|linebreaksbr }}</p>
+        <h3>Problem statement</h3><p>{{ topic.problem_statement|linebreaksbr }}</p>
+        <h3>Objectives</h3><p>{{ topic.objectives|linebreaksbr }}</p>
+        {% if topic.status == "RECOMMENDED" and can_approve %}
+        <form method="post" action="{% url 'topic_approve' topic.pk %}">{% csrf_token %}<button class="button" type="submit">Final approve topic</button></form>
+        {% endif %}
+    </section>
+    <section>
+        {% if reviewer_can_act %}<div class="card"><h2>Record topic review</h2>
+            <form method="post" action="{% url 'topic_review' topic.pk %}">{% csrf_token %}
+                <label>Recommendation</label><select name="recommendation" required><option value="">Choose...</option><option value="APPROVE">Recommend approval</option><option value="REVISE">Revise and resubmit</option><option value="REJECT">Reject</option></select>
+                <label>Comments</label><textarea name="comments" rows="4" required placeholder="Explain the reason for this recommendation"></textarea>
+                <button class="button" type="submit" style="margin-top:12px">Save review</button>
+            </form>
+        </div>{% endif %}
+        <div class="card"><h2>Review history</h2>{% for review in reviews %}<div style="border-bottom:1px solid var(--line);padding:12px 0"><strong>{{ review.get_recommendation_display }}</strong><p>{{ review.comments }}</p><small class="muted">{{ review.reviewer.username }} · {{ review.reviewed_at }}</small></div>{% empty %}<p class="muted">No review has been recorded.</p>{% endfor %}</div>
+        <div class="card"><h2>Potentially similar topics</h2><p class="muted">This starter check compares title keywords and research area; a human should confirm similarity.</p>{% for other in similar_topics %}<p><a href="{% url 'topic_detail' other.pk %}">{{ other.title }}</a><br><small>{{ other.research_area }} · {{ other.get_status_display }}</small></p>{% empty %}<p class="muted">No obvious matching topics found.</p>{% endfor %}</div>
+    </section>
+</div>
+{% endblock %}

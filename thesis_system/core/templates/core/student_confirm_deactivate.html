@@ -1,0 +1,14 @@
+{% extends "core/base.html" %}
+{% block title %}Deactivate Student | Thesis Management System{% endblock %}
+{% block content %}
+<div class="card">
+    <h1>Deactivate Student</h1>
+    <p>Are you sure you want to deactivate <strong>{{ student.last_name }}, {{ student.first_name }}</strong> ({{ student.student_number }})?</p>
+    <p>The record will remain in the database; it will not be permanently deleted.</p>
+    <form method="post">
+        {% csrf_token %}
+        <button class="button danger" type="submit">Yes, Deactivate</button>
+        <a class="button secondary" href="{% url 'student_detail' student.pk %}">Cancel</a>
+    </form>
+</div>
+{% endblock %}

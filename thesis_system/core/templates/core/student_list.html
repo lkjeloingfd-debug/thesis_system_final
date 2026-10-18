@@ -1,0 +1,62 @@
+{% extends "core/base.html" %}
+{% block title %}Students | Thesis Management System{% endblock %}
+{% block content %}
+<div class="actions" style="justify-content:space-between;align-items:center;margin-bottom:18px">
+    <div><h1 style="margin-bottom:4px">Students</h1><span class="muted">Register, search, edit, and deactivate student records.</span></div>
+    <a class="button" href="{% url 'student_create' %}">+ Register Student</a>
+</div>
+<div class="card">
+    <!-- This GET form puts filters in the URL, so the results can be bookmarked. -->
+    <form method="get">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
+            <label>Search name or student number
+                <input type="text" name="q" value="{{ query }}" placeholder="Search...">
+            </label>
+            <label>Program
+                <select name="program">
+                    <option value="">All programs</option>
+                    {% for item in programs %}
+                    <option value="{{ item }}" {% if selected_program == item %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Year level
+                <select name="year_level">
+                    <option value="">All year levels</option>
+                    {% for year in "123456" %}
+                    <option value="{{ year }}" {% if selected_year_level == year %}selected{% endif %}>Year {{ year }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Status
+                <select name="status">
+                    <option value="active" {% if selected_status == "active" %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if selected_status == "inactive" %}selected{% endif %}>Inactive</option>
+                    <option value="all" {% if selected_status == "all" %}selected{% endif %}>All</option>
+                </select>
+            </label>
+        </div>
+        <div class="actions"><button class="button" type="submit">Apply Filters</button><a class="button secondary" href="{% url 'student_list' %}">Clear</a></div>
+    </form>
+</div>
+<div class="card">
+    <div class="table-wrap">
+    <table>
+        <thead><tr><th>Student No.</th><th>Name</th><th>Program</th><th>Year</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody>
+        {% for student in students %}
+            <tr>
+                <td>{{ student.student_number }}</td>
+                <td><a href="{% url 'student_detail' student.pk %}">{{ student.last_name }}, {{ student.first_name }}{% if student.middle_name %} {{ student.middle_name }}{% endif %}</a></td>
+                <td>{{ student.program }}</td><td>{{ student.year_level }}</td>
+                <td>{% if student.is_active %}Active{% else %}Inactive{% endif %}</td>
+                <td><a href="{% url 'student_edit' student.pk %}">Edit</a></td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="6">No students match these filters yet.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

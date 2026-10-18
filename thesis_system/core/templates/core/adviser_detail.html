@@ -1,0 +1,19 @@
+{% extends "core/base.html" %}
+{% block title %}Adviser Profile | Thesis Management System{% endblock %}
+{% block content %}
+<div class="header-top" style="margin-bottom:18px"><div><h1>{{ adviser.first_name }} {{ adviser.last_name }}</h1><p class="page-intro">Adviser specialization and workload.</p></div><div class="actions">{% if can_edit %}<a class="button" href="{% url 'adviser_edit' adviser.pk %}">Edit adviser</a>{% endif %}<a class="button secondary" href="{% url 'adviser_list' %}">Back to list</a></div></div>
+<div class="grid">
+    <div class="metric"><span>Current active advisees</span><strong>{{ adviser.current_advisee_count }}</strong></div>
+    <div class="metric"><span>Maximum advisees</span><strong>{{ adviser.max_advisees }}</strong></div>
+    <div class="metric"><span>Available slots</span><strong>{{ adviser.available_slots }}</strong></div>
+</div>
+<div class="card" style="margin-top:18px">
+    <div class="detail-row"><strong>Faculty ID</strong><span>{{ adviser.faculty_id }}</span></div>
+    <div class="detail-row"><strong>Department</strong><span>{{ adviser.department|default:"—" }}</span></div>
+    <div class="detail-row"><strong>Program</strong><span>{{ adviser.program|default:"—" }}</span></div>
+    <div class="detail-row"><strong>Specialization</strong><span>{{ adviser.specialization }}</span></div>
+    <div class="detail-row"><strong>Email</strong><span>{{ adviser.email|default:"—" }}</span></div>
+    <div class="detail-row"><strong>Status</strong><span>{{ adviser.is_active|yesno:"Active,Inactive" }}</span></div>
+</div>
+<div class="card"><h2>Assigned students</h2><div class="table-wrap"><table><thead><tr><th>Student</th><th>Program</th><th>Year</th><th>Thesis status</th></tr></thead><tbody>{% for student in students %}<tr><td><a href="{% url 'student_detail' student.pk %}">{{ student.full_name }}</a></td><td>{{ student.program }}</td><td>{{ student.year_level }}</td><td>{{ student.thesis_status }}</td></tr>{% empty %}<tr><td colspan="4">No students assigned.</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

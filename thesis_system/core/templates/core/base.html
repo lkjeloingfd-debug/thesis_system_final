@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#234b3a">
+    <title>{% block title %}Thesis Management System{% endblock %}</title>
+    <style>
+        :root {
+            --green: #234b3a;
+            --green-dark: #183528;
+            --green-soft: #315f49;
+            --beige: #f4f0e5;
+            --paper: #fffdf8;
+            --line: #ded8c9;
+            --ink: #252b27;
+            --muted: #68716b;
+            --danger: #9b3737;
+            --shadow: 0 18px 50px rgba(26, 39, 30, 0.18);
+        }
+
+        * { box-sizing: border-box; }
+        html { min-width: 320px; scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            color: var(--ink);
+            background: var(--beige);
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 15px;
+            line-height: 1.55;
+        }
+        body.menu-open { overflow: hidden; }
+        a { color: var(--green); }
+        a:focus-visible, button:focus-visible, input:focus-visible,
+        select:focus-visible, textarea:focus-visible {
+            outline: 3px solid #9bc5a7;
+            outline-offset: 2px;
+        }
+        h1, h2, h3 { line-height: 1.25; overflow-wrap: anywhere; }
+        h1 { margin: 0 0 8px; font-size: clamp(1.55rem, 3vw, 2rem); }
+        h2 { margin: 0 0 12px; font-size: 1.25rem; }
+        h3 { margin: 0 0 10px; font-size: 1rem; }
+        p { max-width: 72ch; line-height: 1.65; overflow-wrap: anywhere; }
+        img, video, iframe { max-width: 100%; }
+        code, pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+        .site-header {
+            position: relative;
+            z-index: 5;
+            background: var(--green);
+            color: #fff;
+            box-shadow: 0 3px 14px rgba(18, 41, 28, 0.12);
+        }
+        .header-inner {
+            width: min(100% - 32px, 960px);
+            min-height: 76px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+        }
+        .brand {
+            color: #fff;
+            text-decoration: none;
+            font-size: clamp(1rem, 2vw, 1.15rem);
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            line-height: 1.3;
+        }
+        .header-account {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 14px;
+            min-width: 0;
+            color: #e7eee9;
+            font-size: 0.82rem;
+        }
+        .header-account span { overflow-wrap: anywhere; }
+        .menu-toggle, .menu-close {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            width: 46px;
+            height: 46px;
+            padding: 0;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            border-radius: 10px;
+            color: #fff;
+            background: transparent;
+            cursor: pointer;
+        }
+        .menu-toggle:hover, .menu-close:hover { background: var(--green-soft); }
+        .menu-toggle svg { width: 25px; height: 25px; }
+        .menu-toggle .sr-only, .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .menu-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            background: rgba(15, 25, 19, 0.48);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 180ms ease, visibility 180ms ease;
+        }
+        .site-menu {
+            position: fixed;
+            z-index: 21;
+            inset: 0 0 0 auto;
+            width: min(365px, calc(100vw - 24px));
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            padding: 22px;
+            color: var(--ink);
+            background: var(--paper);
+            box-shadow: var(--shadow);
+            transform: translateX(105%);
+            visibility: hidden;
+            transition: transform 200ms ease, visibility 200ms ease;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+        .site-menu.is-open { transform: translateX(0); visibility: visible; }
+        .menu-backdrop.is-open { opacity: 1; visibility: visible; }
+        .menu-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--line);
+        }
+        .menu-title { margin: 0; color: var(--green); font-size: 1.12rem; }
+        .menu-close { color: var(--green); border-color: var(--line); }
+        .menu-close:hover { color: #fff; }
+        .menu-user {
+            margin: 15px 0 9px;
+            padding: 11px 12px;
+            border-radius: 8px;
+            background: #f0eee5;
+            color: var(--muted);
+            font-size: 0.82rem;
+            overflow-wrap: anywhere;
+        }
+        .menu-section { margin-top: 17px; }
+        .menu-section-label {
+            margin: 0 0 7px;
+            color: var(--muted);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        .menu-links { display: grid; gap: 4px; }
+        .menu-links a, .menu-logout {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            min-height: 42px;
+            padding: 10px 12px;
+            border: 0;
+            border-radius: 7px;
+            color: var(--ink);
+            background: transparent;
+            font: inherit;
+            text-align: left;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .menu-links a:hover, .menu-logout:hover { color: var(--green-dark); background: #e9eee7; }
+        .menu-footer { margin-top: auto; padding-top: 20px; }
+        .menu-logout { color: var(--danger); background: #f8e9e5; }
+
+        main {
+            width: min(100% - 32px, 960px);
+            min-height: 70vh;
+            margin: 28px auto 0;
+            padding: 0 0 46px;
+        }
+        .header-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .header-top > * { min-width: 0; }
+        .page-intro { margin: 0 0 20px; color: var(--muted); }
+        .muted { color: var(--muted); }
+        .card, .metric {
+            min-width: 0;
+            margin: 0 0 18px;
+            padding: 20px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--paper);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+            gap: 13px;
+        }
+        .metric span { display: block; margin-bottom: 8px; color: var(--muted); font-size: 0.82rem; }
+        .metric strong { color: var(--green); font-size: clamp(1.5rem, 3vw, 1.8rem); overflow-wrap: anywhere; }
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            padding: 9px 13px;
+            border: 0;
+            border-radius: 7px;
+            color: #fff;
+            background: var(--green);
+            font-family: inherit;
+            font-size: 0.9rem;
+            line-height: 1.25;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            overflow-wrap: anywhere;
+        }
+        .button:hover { background: var(--green-soft); }
+        .button.secondary { color: #24342b; background: #e7e2d5; }
+        .button.secondary:hover { background: #dad4c5; }
+        .button.danger { background: var(--danger); }
+        .button.small { min-height: 32px; padding: 6px 9px; font-size: 0.78rem; }
+        input, select, textarea {
+            display: block;
+            width: 100%;
+            min-width: 0;
+            padding: 10px 11px;
+            border: 1px solid #c9c5b9;
+            border-radius: 6px;
+            color: var(--ink);
+            background: #fff;
+            font: inherit;
+        }
+        textarea { min-height: 100px; resize: vertical; }
+        label { display: block; margin: 12px 0 5px; font-size: 0.88rem; font-weight: 600; }
+        .field { min-width: 0; margin-bottom: 13px; }
+        .helptext { display: block; margin-top: 4px; color: var(--muted); font-size: 0.76rem; font-weight: 400; }
+        .errorlist, .errors { margin: 6px 0; padding-left: 0; color: #a12626; font-size: 0.82rem; list-style: none; }
+        .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+        .message { margin-bottom: 12px; padding: 12px 15px; border: 1px solid #c6dfc4; border-radius: 8px; background: #e0eedf; }
+        .message.error { border-color: #edc9c0; background: #f8e4df; }
+        .table-wrap { max-width: 100%; overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; background: var(--paper); }
+        th, td { padding: 11px 12px; border-bottom: 1px solid var(--line); font-size: 0.85rem; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+        th { color: #435047; background: #e9e5d9; font-size: 0.72rem; letter-spacing: 0.03em; text-transform: uppercase; white-space: nowrap; }
+        tr:last-child td { border-bottom: 0; }
+        .status { display: inline-block; padding: 4px 8px; border-radius: 20px; background: #e8e6dc; font-size: 0.75rem; }
+        .two-col { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 16px; align-items: start; }
+        .two-col > * { min-width: 0; }
+        .detail-row { display: grid; grid-template-columns: minmax(105px, 0.32fr) minmax(0, 1fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+        .detail-row:last-child { border-bottom: 0; }
+        .detail-row strong { color: #536058; }
+        footer { width: min(100% - 32px, 960px); margin: 0 auto; padding: 20px 0; color: var(--muted); font-size: 0.75rem; text-align: center; }
+
+        @media (max-width: 760px) {
+            .header-inner { width: min(100% - 24px, 960px); min-height: 68px; gap: 10px; }
+            .header-account { gap: 8px; }
+            .header-account span { display: none; }
+            main { width: min(100% - 24px, 960px); margin-top: 20px; }
+            .card, .metric { padding: 16px; }
+            .two-col { grid-template-columns: minmax(0, 1fr); gap: 0; }
+            .detail-row { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+            th, td { padding: 9px; }
+            footer { width: min(100% - 24px, 960px); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+        }
+    </style>
+</head>
+<body>
+<header class="site-header">
+    <div class="header-inner">
+        <a class="brand" href="{% url 'home' %}">Thesis Management System</a>
+        <div class="header-account">
+            <span>Signed in as <strong>{{ request.user.username }}</strong></span>
+            <button class="menu-toggle" id="menu-toggle" type="button" aria-controls="site-menu" aria-expanded="false" aria-label="Open navigation menu">
+                <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M4 6h16"></path>
+                    <path d="M4 12h16"></path>
+                    <path d="M4 18h16"></path>
+                </svg>
+                <span class="sr-only">Open navigation menu</span>
+            </button>
+        </div>
+    </div>
+</header>
+
+<div class="menu-backdrop" id="menu-backdrop" hidden></div>
+<aside class="site-menu" id="site-menu" role="dialog" aria-modal="true" aria-labelledby="menu-title" aria-hidden="true" inert>
+    <div class="menu-top">
+        <h2 class="menu-title" id="menu-title">Navigation</h2>
+        <button class="menu-close" id="menu-close" type="button" aria-label="Close navigation menu">
+            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="m6 6 12 12"></path>
+                <path d="M18 6 6 18"></path>
+            </svg>
+        </button>
+    </div>
+    <div class="menu-user">Signed in as <strong>{{ request.user.username }}</strong></div>
+
+    <nav aria-label="Main navigation">
+        <section class="menu-section">
+            <h3 class="menu-section-label">Overview</h3>
+            <div class="menu-links">
+                <a href="{% url 'home' %}">Dashboard</a>
+                <a href="{% url 'student_portal' %}">Student Portal</a>
+            </div>
+        </section>
+        <section class="menu-section">
+            <h3 class="menu-section-label">Thesis workflow</h3>
+            <div class="menu-links">
+                <a href="{% url 'student_list' %}">Students</a>
+                <a href="{% url 'adviser_list' %}">Advisers</a>
+                <a href="{% url 'topic_list' %}">Thesis Topics</a>
+                <a href="{% url 'proposal_list' %}">Proposals</a>
+                <a href="{% url 'defense_list' %}">Defenses</a>
+                <a href="{% url 'revision_list' %}">Revisions</a>
+                <a href="{% url 'repository_list' %}">Thesis Repository</a>
+            </div>
+        </section>
+        <section class="menu-section">
+            <h3 class="menu-section-label">Reports and updates</h3>
+            <div class="menu-links">
+                <a href="{% url 'reports' %}">Reports</a>
+                <a href="{% url 'notifications' %}">Notifications</a>
+            </div>
+        </section>
+        {% if request.user.is_staff or request.user.is_superuser %}
+        <section class="menu-section">
+            <h3 class="menu-section-label">Administration</h3>
+            <div class="menu-links">
+                <a href="{% url 'criteria_list' %}">Evaluation Criteria</a>
+                <a href="{% url 'audit_log' %}">Audit Log</a>
+                <a href="/admin/">Django Admin</a>
+            </div>
+        </section>
+        {% endif %}
+    </nav>
+
+    <div class="menu-footer">
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button class="menu-logout" type="submit">Log out</button>
+        </form>
+    </div>
+</aside>
+
+<main id="main-content">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message {% if message.tags == 'error' %}error{% endif %}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+</main>
+
+<footer>Thesis Management System · Student project · Review security settings before real deployment.</footer>
+<script>
+    (() => {
+        const toggle = document.getElementById('menu-toggle');
+        const menu = document.getElementById('site-menu');
+        const closeButton = document.getElementById('menu-close');
+        const backdrop = document.getElementById('menu-backdrop');
+        if (!toggle || !menu || !closeButton || !backdrop) return;
+
+        function openMenu() {
+            menu.classList.add('is-open');
+            backdrop.hidden = false;
+            requestAnimationFrame(() => backdrop.classList.add('is-open'));
+            menu.removeAttribute('inert');
+            menu.setAttribute('aria-hidden', 'false');
+            toggle.setAttribute('aria-expanded', 'true');
+            toggle.setAttribute('aria-label', 'Close navigation menu');
+            document.body.classList.add('menu-open');
+            closeButton.focus();
+        }
+
+        function closeMenu(returnFocus = true) {
+            menu.classList.remove('is-open');
+            backdrop.classList.remove('is-open');
+            menu.setAttribute('inert', '');
+            menu.setAttribute('aria-hidden', 'true');
+            toggle.setAttribute('aria-expanded', 'false');
+            toggle.setAttribute('aria-label', 'Open navigation menu');
+            document.body.classList.remove('menu-open');
+            window.setTimeout(() => { backdrop.hidden = true; }, 210);
+            if (returnFocus) toggle.focus();
+        }
+
+        toggle.addEventListener('click', () => {
+            if (toggle.getAttribute('aria-expanded') === 'true') closeMenu();
+            else openMenu();
+        });
+        closeButton.addEventListener('click', () => closeMenu());
+        backdrop.addEventListener('click', () => closeMenu());
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') closeMenu();
+        });
+        menu.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => closeMenu(false)));
+    })();
+</script>
+</body>
+</html>

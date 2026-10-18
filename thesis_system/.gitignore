@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local database and user uploads (back these up separately)
+db.sqlite3
+media/
+
+# Editor / OS
+.vscode/
+.DS_Store
+Thumbs.db
+.env

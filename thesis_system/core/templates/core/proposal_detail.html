@@ -1,0 +1,43 @@
+{% extends "core/base.html" %}
+{% block title %}Proposal Details | Thesis Management System{% endblock %}
+{% block content %}
+<div class="header-top" style="margin-bottom:18px"><div><h1>{{ proposal.topic.title }}</h1><p class="page-intro">Proposal version {{ proposal.version }} · {{ proposal.get_status_display }}</p></div><div class="actions">{% if can_edit %}<a class="button" href="{% url 'proposal_edit' proposal.pk %}">Edit proposal</a>{% endif %}<a class="button secondary" href="{% url 'proposal_list' %}">Back to proposals</a></div></div>
+<div class="two-col">
+    <section class="card">
+        <div class="detail-row"><strong>Student</strong><span>{{ proposal.topic.student.full_name }}</span></div>
+        <div class="detail-row"><strong>Topic status</strong><span>{{ proposal.topic.get_status_display }}</span></div>
+        <div class="detail-row"><strong>Proposal status</strong><span class="status">{{ proposal.get_status_display }}</span></div>
+        <div class="detail-row"><strong>Submitted</strong><span>{{ proposal.submitted_at|default:"Not submitted" }}</span></div>
+        <h3 style="margin-top:20px">Introduction</h3><p>{{ proposal.introduction|default:"Not entered yet."|linebreaksbr }}</p>
+        <h3>Background</h3><p>{{ proposal.background|default:"Not entered yet."|linebreaksbr }}</p>
+        <h3>Problem statement</h3><p>{{ proposal.problem_statement|default:"Not entered yet."|linebreaksbr }}</p>
+        <h3>Objectives</h3><p>{{ proposal.objectives|default:"Not entered yet."|linebreaksbr }}</p>
+        <h3>Scope and limitations</h3><p>{{ proposal.scope_limitations|default:"Not entered yet."|linebreaksbr }}</p>
+        <h3>Significance</h3><p>{{ proposal.significance|default:"Not entered yet."|linebreaksbr }}</p>
+        <h3>Review of related literature</h3><p>{{ proposal.related_literature|default:"Not entered yet."|linebreaksbr }}</p>
+        <h3>Methodology</h3><p>{{ proposal.methodology|default:"Not entered yet."|linebreaksbr }}</p>
+        <h3>References</h3><p>{{ proposal.references|default:"Not entered yet."|linebreaksbr }}</p>
+        {% if proposal.adviser_comments %}<h3>Adviser comments</h3><p>{{ proposal.adviser_comments|linebreaksbr }}</p>{% endif %}
+        {% if proposal.status == "DRAFT" or proposal.status == "FOR_REVISION" or proposal.status == "RESUBMITTED" %}
+        <form method="post" action="{% url 'proposal_submit' proposal.pk %}">{% csrf_token %}<button class="button" type="submit">Submit proposal for review</button></form>
+        {% endif %}
+    </section>
+    <section>
+        <div class="card"><h2>Proposal documents</h2>
+            {% for document in proposal.documents.all %}<div style="border-bottom:1px solid var(--line);padding:10px 0"><a href="{{ document.file.url }}" target="_blank" rel="noopener">{{ document.version_label }}</a><br><small>{{ document.notes }} · uploaded by {{ document.uploaded_by.username }} on {{ document.uploaded_at }}</small></div>{% empty %}<p class="muted">No document uploaded.</p>{% endfor %}
+            <form method="post" enctype="multipart/form-data" action="{% url 'proposal_document_upload' proposal.pk %}">{% csrf_token %}
+                {% for field in document_form %}<div class="field"><label>{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="errors">{{ error }}</div>{% endfor %}</div>{% endfor %}
+                <button class="button" type="submit">Upload document</button>
+            </form>
+        </div>
+        <div class="card"><h2>Review history</h2>
+            {% for review in proposal.reviews.all %}<div style="border-bottom:1px solid var(--line);padding:11px 0"><strong>{{ review.get_status_display }}</strong><p>{{ review.comments|default:"No comment added."|linebreaksbr }}</p><small class="muted">{{ review.reviewer.username }} · {{ review.reviewed_at }}</small></div>{% empty %}<p class="muted">No formal reviews recorded yet.</p>{% endfor %}
+        </div>
+        {% if can_review %}<div class="card"><h2>Proposal review</h2><form method="post" action="{% url 'proposal_review' proposal.pk %}">{% csrf_token %}
+            <label>Review status</label><select name="status" required><option value="UNDER_REVIEW">Under review</option><option value="FOR_REVISION">For revision</option><option value="APPROVED">Approved</option><option value="REJECTED">Rejected</option></select>
+            <label>Comments</label><textarea name="adviser_comments" rows="4">{{ proposal.adviser_comments }}</textarea><button class="button" type="submit" style="margin-top:12px">Save review</button>
+        </form><p class="muted">Approval is blocked until at least one proposal document is uploaded.</p></div>{% endif %}
+        {% if proposal.status == "APPROVED" %}<div class="card"><h2>Next step</h2><p>The approved proposal can be used to create a defense schedule.</p><a class="button" href="{% url 'defense_create' %}">Schedule defense</a></div>{% endif %}
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "core/base.html" %}
+{% block title %}{{ page_title }} | Thesis Management System{% endblock %}
+{% block content %}
+<div class="card">
+    <h1>{{ page_title }}</h1>
+    <p class="muted">Fields with an asterisk are required by the form/database.</p>
+    <!-- csrf_token protects this POST form from cross-site request forgery. -->
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <label>{{ field.label }}
+                {{ field }}
+                {% if field.help_text %}<small class="muted">{{ field.help_text }}</small>{% endif %}
+                {% for error in field.errors %}<div class="errors">{{ error }}</div>{% endfor %}
+            </label>
+        {% endfor %}
+        {% if form.non_field_errors %}<div class="errors">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="actions"><button class="button" type="submit">Save Student</button><a class="button secondary" href="{% url 'student_list' %}">Cancel</a></div>
+    </form>
+</div>
+{% endblock %}

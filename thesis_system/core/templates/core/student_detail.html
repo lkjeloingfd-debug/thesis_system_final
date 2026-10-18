@@ -1,0 +1,27 @@
+{% extends "core/base.html" %}
+{% block title %}Student Profile | Thesis Management System{% endblock %}
+{% block content %}
+<div class="header-top" style="margin-bottom:18px"><div><h1>{{ student.full_name }}</h1><p class="page-intro">Student profile and connected thesis progress.</p></div><div class="actions">{% if can_edit %}<a class="button" href="{% url 'student_edit' student.pk %}">Edit profile</a>{% endif %}<a class="button secondary" href="{% url 'student_list' %}">Back to list</a></div></div>
+<div class="two-col">
+    <section class="card">
+        <h2>Personal information</h2>
+        <div class="detail-row"><strong>Student number</strong><span>{{ student.student_number }}</span></div>
+        <div class="detail-row"><strong>Email</strong><span>{{ student.email|default:"Not provided" }}</span></div>
+        <div class="detail-row"><strong>Contact</strong><span>{{ student.contact_number|default:"Not provided" }}</span></div>
+        <div class="detail-row"><strong>Program</strong><span>{{ student.program }}</span></div>
+        <div class="detail-row"><strong>Year level</strong><span>{{ student.year_level }}</span></div>
+        <div class="detail-row"><strong>Academic year</strong><span>{{ student.academic_year }}</span></div>
+        <div class="detail-row"><strong>Adviser</strong><span>{% if student.adviser %}<a href="{% url 'adviser_detail' student.adviser.pk %}">{{ student.adviser }}</a>{% else %}Not assigned{% endif %}</span></div>
+        <div class="detail-row"><strong>Account status</strong><span>{{ student.is_active|yesno:"Active,Inactive" }}</span></div>
+        {% if student.is_active %}<form method="post" action="{% url 'student_deactivate' student.pk %}" style="margin-top:18px" onsubmit="return confirm('Deactivate this student? Their record will be kept.');">{% csrf_token %}<button class="button danger" type="submit">Deactivate student</button></form>{% endif %}
+    </section>
+    <section class="card">
+        <h2>Thesis progress</h2>
+        <p><span class="muted">Current status</span><br><strong>{{ student.thesis_status }}</strong></p>
+        <h3>Topic history</h3>
+        {% for topic in student.topics.all %}<p><a href="{% url 'topic_detail' topic.pk %}">{{ topic.title }}</a><br><span class="muted">{{ topic.get_status_display }}</span></p>{% empty %}<p class="muted">No topics submitted yet.</p>{% endfor %}
+        <h3>Final thesis records</h3>
+        {% for thesis in student.final_theses.all %}<p><a href="{% url 'final_thesis_detail' thesis.pk %}">{{ thesis.title }}</a> · {{ thesis.get_status_display }}</p>{% empty %}<p class="muted">No final thesis record yet.</p>{% endfor %}
+    </section>
+</div>
+{% endblock %}

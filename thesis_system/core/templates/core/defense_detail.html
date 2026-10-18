@@ -1,0 +1,30 @@
+{% extends "core/base.html" %}
+{% block title %}Defense Details | Thesis Management System{% endblock %}
+{% block content %}
+<div class="header-top" style="margin-bottom:18px"><div><h1>{{ defense.get_defense_type_display }}</h1><p class="page-intro">{{ defense.proposal.topic.title }}</p></div><a class="button secondary" href="{% url 'defense_list' %}">Back to calendar</a></div>
+<div class="two-col">
+    <section class="card">
+        <div class="detail-row"><strong>Student</strong><span><a href="{% url 'student_detail' defense.proposal.topic.student.pk %}">{{ defense.proposal.topic.student.full_name }}</a></span></div>
+        <div class="detail-row"><strong>Proposal</strong><span><a href="{% url 'proposal_detail' defense.proposal.pk %}">{{ defense.proposal.topic.title }} v{{ defense.proposal.version }}</a></span></div>
+        <div class="detail-row"><strong>Date</strong><span>{{ defense.defense_date }}</span></div>
+        <div class="detail-row"><strong>Time</strong><span>{{ defense.defense_time }}</span></div>
+        <div class="detail-row"><strong>Venue</strong><span>{{ defense.venue }}</span></div>
+        <div class="detail-row"><strong>Status</strong><span class="status">{{ defense.get_status_display }}</span></div>
+        <div class="detail-row"><strong>Official decision</strong><span>{% if defense.final_decision %}{{ defense.get_final_decision_display }}{% else %}Not finalized{% endif %}</span></div>
+        <div class="detail-row"><strong>Average panel score</strong><span>{% if defense.final_score != None %}{{ defense.final_score }} / 100{% else %}Not finalized{% endif %}</span></div>
+        <p>{{ defense.notes|default:"No additional notes."|linebreaksbr }}</p>
+        <h2 style="margin-top:25px">Assigned panel</h2>
+        {% for assignment in defense.panel_assignments.select_related.all %}<p>{{ assignment.adviser }} <span class="status">{{ assignment.get_role_display }}</span></p>{% empty %}<p class="muted">No panel members assigned.</p>{% endfor %}
+        {% if panel_roles_allowed and defense.status == "SCHEDULED" %}<form method="post" action="{% url 'defense_panel_add' defense.pk %}" class="card" style="background:#f8f6ef">{% csrf_token %}<h3>Assign panel member</h3>
+            {% for field in panel_form %}<div class="field"><label>{{ field.label }}</label>{{ field }}{% for error in field.errors %}<div class="errors">{{ error }}</div>{% endfor %}</div>{% endfor %}
+            <button class="button" type="submit">Assign member</button></form>
+        <form method="post" action="{% url 'defense_mark_completed' defense.pk %}" style="margin-top:12px">{% csrf_token %}<button class="button secondary" type="submit">Mark defense completed</button></form>{% endif %}
+    </section>
+    <section>
+        {% if evaluation_allowed %}<div class="card"><h2>Evaluation</h2><p>Panel members submit scores against the active weighted criteria.</p><a class="button" href="{% url 'evaluation_page' defense.pk %}">Enter evaluation</a>
+            {% for evaluation in defense.evaluations.all %}<div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px"><strong>{{ evaluation.evaluator.username }}</strong><p>Score: {{ evaluation.weighted_score }} / 100</p><p>Decision: {{ evaluation.get_decision_display|default:"Not selected" }}</p></div>{% empty %}<p class="muted">No evaluations submitted yet.</p>{% endfor %}</div>{% endif %}
+        {% if can_finalize_decision and defense.status == "COMPLETED" %}<div class="card"><h2>Finalize official decision</h2><p class="muted">After panel members finish their evaluations, the coordinator records the final decision. The score is averaged automatically from the submitted weighted scores.</p><form method="post" action="{% url 'defense_finalize_decision' defense.pk %}">{% csrf_token %}<label for="final_decision">Official decision</label><select id="final_decision" name="final_decision" required>{% for value,label in defense_decisions %}<option value="{{ value }}" {% if defense.final_decision == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="button" type="submit" style="margin-top:12px">Save official result</button></form></div>{% endif %}
+        {% if revision_allowed %}<div class="card"><h2>Revision requests</h2><a class="button secondary" href="{% url 'revision_create' %}">Create revision request</a>{% for revision in defense.revision_requests.all %}<p><a href="{% url 'revision_detail' revision.pk %}">{{ revision.section }}</a> · {{ revision.get_status_display }}</p>{% empty %}<p class="muted">No revisions linked to this defense yet.</p>{% endfor %}</div>{% endif %}
+    </section>
+</div>
+{% endblock %}

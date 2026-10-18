@@ -1,0 +1,7 @@
+{% extends "core/base.html" %}
+{% block title %}Student Portal | Thesis Management System{% endblock %}
+{% block content %}
+<h1>Student Portal</h1><p class="page-intro">Self-service view for the student record connected to your login.</p>
+<div class="card"><h2>{{ student.full_name }}</h2><p>{{ student.student_number }} · {{ student.program }} · Year {{ student.year_level }}</p><p><strong>Current thesis status:</strong> {{ student.thesis_status }}</p><div class="actions"><a class="button" href="{% url 'topic_create' %}">Submit a topic</a><a class="button secondary" href="{% url 'proposal_create' %}">Create proposal</a></div></div>
+<div class="two-col"><section class="card"><h2>My topics</h2>{% for topic in topics %}<p><a href="{% url 'topic_detail' topic.pk %}">{{ topic.title }}</a><br><span class="muted">{{ topic.get_status_display }}</span></p>{% empty %}<p class="muted">No topics yet.</p>{% endfor %}</section><section class="card"><h2>My revisions</h2>{% for revision in revisions %}<p><a href="{% url 'revision_detail' revision.pk %}">{{ revision.section }}</a> · {{ revision.get_status_display }}</p>{% empty %}<p class="muted">No revision requests.</p>{% endfor %}<h2 style="margin-top:24px">My final thesis</h2>{% for thesis in final_theses %}<p><a href="{% url 'final_thesis_detail' thesis.pk %}">{{ thesis.title }}</a> · {{ thesis.get_status_display }}</p>{% empty %}<p class="muted">No final thesis record.</p>{% endfor %}</section></div>
+{% endblock %}

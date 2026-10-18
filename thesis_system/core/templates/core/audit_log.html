@@ -1,0 +1,6 @@
+{% extends "core/base.html" %}
+{% block title %}Audit Log | Thesis Management System{% endblock %}
+{% block content %}
+<h1>Audit Log</h1><p class="page-intro">Recent user actions recorded by the system. The newest 300 entries are shown.</p>
+<div class="card"><div class="table-wrap"><table><thead><tr><th>Date/time</th><th>User</th><th>Action</th><th>Module</th><th>Record ID</th><th>Remarks</th></tr></thead><tbody>{% for item in logs %}<tr><td>{{ item.created_at }}</td><td>{{ item.user|default:"Unknown/deleted user" }}</td><td>{{ item.action }}</td><td>{{ item.module }}</td><td>{{ item.record_id|default:"—" }}</td><td>{{ item.remarks|default:"—" }}</td></tr>{% empty %}<tr><td colspan="6">No actions recorded yet.</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}
