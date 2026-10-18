@@ -9,7 +9,15 @@ https://docs.djangoproject.com/en/6.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
-
+""" 
+this settings.py file is configured for local development. taken from ai
+import os
+import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
+"""
+import os
+import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,14 +28,31 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-8pvi(^%gnf^+z(xsmx=7eee$e-sg47ki%ne0dmbrvk_o83k+vx'
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "local-development-only-key",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() == "true"
+
+
+if not DEBUG and SECRET_KEY == "local-development-only-key":
+    raise ImproperlyConfigured(
+        "Set DJANGO_SECRET_KEY before production deployment."
+    )
 
 # Development setting only. Restrict this list to your real domain/host when deploying.
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    ".vercel.app",
+]
 
+# CSRF_TRUSTED_ORIGINS is required for Django 4.0+ when using HTTPS.
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.vercel.app",
+]
 
 # Application definition
 
