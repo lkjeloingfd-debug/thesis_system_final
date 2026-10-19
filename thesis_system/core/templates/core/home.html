@@ -26,7 +26,16 @@
     </section>
     <section class="card">
         <h2>Unread notifications</h2>
-        {% for notice in recent_notifications %}<p>• <a href="{{ notice.target_url|default:'#' }}">{{ notice.message }}</a></p>{% empty %}<p class="muted">You have no unread notifications.</p>{% endfor %}
+        {% for notice in recent_notifications %}
+        <p>• 
+            <a href="{{ notice.target_url|default:'#' }}">
+            {{ notice.message }}
+        </a>
+        </p>
+        {% empty %}
+        <p class="muted">
+            You have no unread notifications.
+        </p>{% endfor %}
         <a href="{% url 'notifications' %}">View all notifications →</a>
     </section>
 </div>

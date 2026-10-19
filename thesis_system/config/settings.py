@@ -47,11 +47,13 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     ".vercel.app",
+    "192.168.9.83"
 ]
 
 # CSRF_TRUSTED_ORIGINS is required for Django 4.0+ when using HTTPS.
 CSRF_TRUSTED_ORIGINS = [
     "https://*.vercel.app",
+    #"https://192.168.9.83"
 ]
 
 # Application definition

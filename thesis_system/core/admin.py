@@ -1,3 +1,5 @@
+# 192.168.9.83
+
 from django.contrib import admin
 from .models import (
     Student, Adviser, ThesisTopic, TopicReview, ThesisProposal, ProposalReview, ProposalDocument,
