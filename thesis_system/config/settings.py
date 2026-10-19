@@ -34,7 +34,7 @@ SECRET_KEY = os.environ.get(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() == "true"
+DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() == "true"
 
 
 if not DEBUG and SECRET_KEY == "local-development-only-key":
@@ -47,7 +47,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     ".vercel.app",
-    "192.168.9.83"
+    #"192.168.9.83"
 ]
 
 # CSRF_TRUSTED_ORIGINS is required for Django 4.0+ when using HTTPS.
