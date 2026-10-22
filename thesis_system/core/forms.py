@@ -1,9 +1,12 @@
 from django import forms
 from pathlib import Path
+
 from .models import (
     Student, Adviser, ThesisTopic, ThesisProposal, ProposalDocument, Defense,
-    DefensePanel, EvaluationCriterion, RevisionRequest, FinalThesis,
+    DefensePanel, EvaluationCriterion, RevisionRequest, FinalThesis, Course,
 )
+
+
 
 
 class StudentForm(forms.ModelForm):
@@ -246,3 +249,14 @@ class FinalThesisForm(forms.ModelForm):
         if proposal and proposal.status != ThesisProposal.Status.APPROVED:
             self.add_error("proposal", "Final thesis must be connected to an approved proposal.")
         return data
+
+
+class CourseForm(forms.ModelForm):
+    """Form for creating and updating course records."""
+
+    class Meta:
+        model = Course
+        fields = ["course_code", "course_name", "description", "units", "is_active"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }
