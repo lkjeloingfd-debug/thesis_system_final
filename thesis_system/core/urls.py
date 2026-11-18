@@ -13,6 +13,13 @@ urlpatterns = [
     path("students/<int:pk>/deactivate/", views.student_deactivate, name="student_deactivate"),
     path("advisers/", views.adviser_list, name="adviser_list"),
     path("advisers/add/", views.adviser_create, name="adviser_create"),
+    #exam
+    # Course Management
+    path("courses/", views.course_list, name="course_list"),
+    path("courses/add/", views.course_create, name="course_create"),
+    path("courses/<int:pk>/edit/", views.course_edit, name="course_edit"),
+    path("courses/<int:pk>/delete/", views.course_delete, name="course_delete"),
+    #exam
     path("advisers/<int:pk>/", views.adviser_detail, name="adviser_detail"),
     path("advisers/<int:pk>/edit/", views.adviser_edit, name="adviser_edit"),
     path("topics/", views.topic_list, name="topic_list"),

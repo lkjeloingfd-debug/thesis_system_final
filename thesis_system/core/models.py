@@ -3,6 +3,20 @@ from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
+#exam course
+class Course(models.Model):
+    course_name = models.CharField(max_length=150, unique=True)
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["course_name"]
+
+    def __str__(self):
+        return self.course_name
+#exam course
+
 
 class Student(models.Model):
     """A student record. The optional User link enables student self-service."""
@@ -15,6 +29,15 @@ class Student(models.Model):
     email = models.EmailField(blank=True)
     contact_number = models.CharField(max_length=30, blank=True)
     program = models.CharField(max_length=150)
+    #exam course
+    course = models.ForeignKey(
+    Course,
+    on_delete=models.SET_NULL,
+    null=True,
+    blank=True,
+    related_name="students"
+)
+    #exam cousre
     year_level = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(6)])
     academic_year = models.CharField(max_length=20, help_text="Example: 2026-2027")
     adviser = models.ForeignKey("Adviser", null=True, blank=True, on_delete=models.SET_NULL,

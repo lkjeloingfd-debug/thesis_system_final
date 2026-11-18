@@ -16,12 +16,12 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .forms import (
-    StudentForm, AdviserForm, ThesisTopicForm, ThesisProposalForm,
+    CourseForm,StudentForm, AdviserForm, ThesisTopicForm, ThesisProposalForm,
     ProposalDocumentForm, DefenseForm, DefensePanelForm, EvaluationCriterionForm,
     RevisionRequestForm, StudentRevisionSubmissionForm, FinalThesisForm,
 )
 from .models import (
-    Student, Adviser, ThesisTopic, TopicReview, ThesisProposal, ProposalReview, ProposalDocument,
+    Course, Student, Adviser, ThesisTopic, TopicReview, ThesisProposal, ProposalReview, ProposalDocument,
     Defense, DefensePanel, EvaluationCriterion, Evaluation, EvaluationScore,
     RevisionRequest, FinalThesis, Notification, AuditLog, RepositoryAccess,
 )
@@ -1166,3 +1166,102 @@ def student_portal(request):
         return redirect("home")
     return render(request, "core/student_portal.html", {"student": student,
         "topics": student.topics.all(), "revisions": student.revision_requests.all(), "final_theses": student.final_theses.all()})
+
+#exam 
+# ---------------------------------------------------------
+# COURSE MANAGEMENT - CRUD OPERATIONS
+# ---------------------------------------------------------
+
+@login_required
+def course_list(request):
+    """Display all courses and the number of students assigned to each."""
+
+    if not has_role(request.user, MANAGEMENT_ROLES):
+        return render(request, "core/access_denied.html", status=403)
+
+    courses = Course.objects.annotate(
+        total_students=Count("students")
+    ).order_by("course_name")
+
+    return render(request, "core/course_list.html", {
+        "courses": courses,
+    })
+
+
+@login_required
+def course_create(request):
+    """Create a new course."""
+
+    if not has_role(request.user, MANAGEMENT_ROLES):
+        return render(request, "core/access_denied.html", status=403)
+
+    form = CourseForm(request.POST or None)
+
+    if request.method == "POST":
+        if form.is_valid():
+            course = form.save()
+
+            messages.success(
+                request,
+                f"Course '{course.course_name}' was created successfully."
+            )
+
+            return redirect("course_list")
+
+    return form_page(
+        request,
+        form,
+        "Add New Course",
+        "/courses/"
+    )
+
+
+@login_required
+def course_edit(request, pk):
+    """Update an existing course."""
+
+    if not has_role(request.user, MANAGEMENT_ROLES):
+        return render(request, "core/access_denied.html", status=403)
+
+    course = get_object_or_404(Course, pk=pk)
+    form = CourseForm(request.POST or None, instance=course)
+
+    if request.method == "POST":
+        if form.is_valid():
+            course = form.save()
+
+            messages.success(
+                request,
+                f"Course '{course.course_name}' was updated successfully."
+            )
+
+            return redirect("course_list")
+
+    return form_page(
+        request,
+        form,
+        "Edit Course",
+        "/courses/"
+    )
+
+
+@login_required
+@require_POST
+def course_delete(request, pk):
+    """Delete a course."""
+
+    if not has_role(request.user, MANAGEMENT_ROLES):
+        return render(request, "core/access_denied.html", status=403)
+
+    course = get_object_or_404(Course, pk=pk)
+    course_name = course.course_name
+
+    course.delete()
+
+    messages.success(
+        request,
+        f"Course '{course_name}' was deleted successfully."
+    )
+
+    return redirect("course_list")
+#exam

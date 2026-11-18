@@ -1,17 +1,30 @@
 from django import forms
 from pathlib import Path
 from .models import (
-    Student, Adviser, ThesisTopic, ThesisProposal, ProposalDocument, Defense,
-    DefensePanel, EvaluationCriterion, RevisionRequest, FinalThesis,
+    Course, Student, Adviser, ThesisTopic, ThesisProposal,
+    ProposalDocument, Defense, DefensePanel, EvaluationCriterion,
+    RevisionRequest, FinalThesis,
 )
 
 
 class StudentForm(forms.ModelForm):
     class Meta:
         model = Student
-        fields = ["user", "student_number", "first_name", "middle_name", "last_name",
-                  "email", "contact_number", "program", "year_level", "academic_year", "adviser", "is_active"]
-
+        fields = [
+    "user",
+    "student_number",
+    "first_name",
+    "middle_name",
+    "last_name",
+    "email",
+    "contact_number",
+    "program",
+    "course",
+    "year_level",
+    "academic_year",
+    "adviser",
+    "is_active",
+]
     def clean_year_level(self):
         year = self.cleaned_data["year_level"]
         if not 1 <= year <= 6:
@@ -29,6 +42,16 @@ class StudentForm(forms.ModelForm):
             elif adviser.current_advisee_count >= adviser.max_advisees and (not current or current.adviser_id != adviser.pk):
                 self.add_error("adviser", "This adviser has reached the maximum advisee capacity.")
         return data
+#exam course
+class CourseForm(forms.ModelForm):
+    class Meta:
+        model = Course
+        fields = ["course_name", "description", "is_active"]
+
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }
+#exam course
 
 
 class AdviserForm(forms.ModelForm):
