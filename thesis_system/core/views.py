@@ -227,7 +227,7 @@ def home(request):
 # -----------------------------------------------------------------------------
 @login_required
 def student_list(request):
-    students = visible_students(request.user).select_related("adviser")
+    students = visible_students(request.user).select_related("adviser" , "course")
     query = request.GET.get("q", "").strip()
     program = request.GET.get("program", "").strip()
     year = request.GET.get("year_level", "").strip()
@@ -244,10 +244,38 @@ def student_list(request):
     if year.isdigit():
         students = students.filter(year_level=int(year))
     programs = Student.objects.order_by("program").values_list("program", flat=True).distinct()
-    rows = [{"primary": s.full_name, "cells": [s.student_number, s.program, f"Year {s.year_level}", s.adviser or "Not assigned", "Active" if s.is_active else "Inactive", s.thesis_status],
-             "url": redirect_url("student_detail", s.pk), "actions": ([{"label": "Edit", "url": redirect_url("student_edit", s.pk)}] if has_role(request.user, MANAGEMENT_ROLES) else [])} for s in students]
+
+    rows = [
+    {
+        "primary": s.full_name,
+        "cells": [
+            s.student_number,
+            s.program,
+            s.course.course_name if s.course else "Not assigned",
+            f"Year {s.year_level}",
+            s.adviser or "Not assigned",
+            "Active" if s.is_active else "Inactive",
+            s.thesis_status,
+        ],
+        "url": redirect_url("student_detail", s.pk),
+        "actions": (
+            [{"label": "Edit", "url": redirect_url("student_edit", s.pk)}]
+            if has_role(request.user, MANAGEMENT_ROLES) else []
+        ),
+    }
+    for s in students
+]             
+
     response = list_page(request, "Students", "Search student records, inspect thesis status, and manage adviser assignments.",
-                         ["Student No.", "Program", "Year", "Adviser", "Status", "Thesis status"], rows,
+                         [
+    "Student No.",
+    "Program",
+    "Course",
+    "Year",
+    "Adviser",
+    "Status",
+    "Thesis status",
+], rows,
                          "student_create" if has_role(request.user, MANAGEMENT_ROLES) else None, "Register student", extra_context={"query": query, "program": program, "year_level": year, "status": status, "programs": programs})
     return response
 
