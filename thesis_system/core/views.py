@@ -3,7 +3,7 @@ from decimal import Decimal, InvalidOperation
 from functools import wraps
 
 from django.contrib import messages
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import Group
@@ -14,11 +14,11 @@ from pathlib import Path
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
-
 from .forms import (
     CourseForm,StudentForm, AdviserForm, ThesisTopicForm, ThesisProposalForm,
     ProposalDocumentForm, DefenseForm, DefensePanelForm, EvaluationCriterionForm,
     RevisionRequestForm, StudentRevisionSubmissionForm, FinalThesisForm,
+    StudentSelfProfileForm, AdviserSelfProfileForm, # resently added forms
 )
 from .models import (
     Course, Student, Adviser, ThesisTopic, TopicReview, ThesisProposal, ProposalReview, ProposalDocument,
@@ -37,10 +37,85 @@ EVALUATION_ROLES = ("Administrator", "Thesis Coordinator", "Adviser", "Panel Mem
 REPOSITORY_ROLES = ("Administrator", "Thesis Coordinator", "Repository Manager")
 
 
+#adding this so students and advisors can log in and log out using their own account
+
+@login_required
+def my_profile_edit(request):
+    student = linked_student(request.user)
+    adviser = linked_adviser(request.user)
+
+    # Students can edit only their own personal information.
+    if student and has_role(request.user, ("Student",)):
+        form = StudentSelfProfileForm(request.POST or None, instance=student)
+
+        if request.method == "POST" and form.is_valid():
+            form.save()
+
+            request.user.first_name = student.first_name
+            request.user.last_name = student.last_name
+            request.user.email = student.email
+            request.user.save()
+
+            messages.success(request, "Your profile was updated.")
+            return redirect("student_detail", pk=student.pk)
+
+        return form_page(request, form, "Edit My Profile",
+                         redirect_url("student_detail", student.pk))
+
+    # Advisers can edit only their own personal information.
+    if adviser and has_role(request.user, ("Adviser",)):
+        form = AdviserSelfProfileForm(request.POST or None, instance=adviser)
+
+        if request.method == "POST" and form.is_valid():
+            form.save()
+
+            request.user.first_name = adviser.first_name
+            request.user.last_name = adviser.last_name
+            request.user.email = adviser.email
+            request.user.save()
+
+            messages.success(request, "Your profile was updated.")
+            return redirect("adviser_detail", pk=adviser.pk)
+
+        return form_page(request, form, "Edit My Profile",
+                         redirect_url("adviser_detail", adviser.pk))
+
+    return render(request, "core/access_denied.html", status=403)
+
+
+@login_required
+@require_POST
+def my_account_deactivate(request):
+    student = linked_student(request.user)
+    adviser = linked_adviser(request.user)
+
+    # Deactivate the linked profile and login account together.
+    if student and has_role(request.user, ("Student",)):
+        student.is_active = False
+        student.save(update_fields=["is_active"])
+        log_action(request, "Deactivated own account", "Students", student)
+
+    elif adviser and has_role(request.user, ("Adviser",)):
+        adviser.is_active = False
+        adviser.save(update_fields=["is_active"])
+        log_action(request, "Deactivated own account", "Advisers", adviser)
+
+    else:
+        return render(request, "core/access_denied.html", status=403)
+
+    request.user.is_active = False
+    request.user.save(update_fields=["is_active"])
+    logout(request)
+
+    messages.success(request, "Your account has been deactivated.")
+    return redirect("login")
+
+
 def has_role(user, roles):
-    """Superusers/staff can administer the demo; other users need a matching Group."""
-    if user.is_superuser or user.is_staff:
+    # Superusers retain administrator access.
+    if user.is_superuser:
         return True
+
     return user.groups.filter(name__in=roles).exists()
 
 
@@ -286,7 +361,7 @@ def redirect_url(name, *args):
     return reverse(name, args=args)
 
 
-@role_required(*MANAGEMENT_ROLES)
+@role_required("Administrator")#meaning admin can only create student
 def student_create(request):
     form = StudentForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -351,7 +426,7 @@ def adviser_list(request):
                      "adviser_create" if has_role(request.user, MANAGEMENT_ROLES) else None, "Register adviser")
 
 
-@role_required(*MANAGEMENT_ROLES)
+@role_required("Administrator")  # Only admin can create adviser
 def adviser_create(request):
     form = AdviserForm(request.POST or None)
     if request.method == "POST" and form.is_valid():

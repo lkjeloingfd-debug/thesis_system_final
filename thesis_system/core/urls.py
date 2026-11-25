@@ -60,4 +60,7 @@ urlpatterns = [
     path("notifications/", views.notifications, name="notifications"),
     path("notifications/<int:pk>/read/", views.notification_read, name="notification_read"),
     path("audit/", views.audit_log, name="audit_log"),
+    path("my-profile/edit/", views.my_profile_edit, name="my_profile_edit"),
+    path("my-profile/deactivate/", views.my_account_deactivate, name="my_account_deactivate"),
+
 ]

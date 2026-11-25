@@ -1,3 +1,8 @@
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.db import transaction
 from django import forms
 from pathlib import Path
 from .models import (
@@ -5,43 +10,6 @@ from .models import (
     ProposalDocument, Defense, DefensePanel, EvaluationCriterion,
     RevisionRequest, FinalThesis,
 )
-
-
-class StudentForm(forms.ModelForm):
-    class Meta:
-        model = Student
-        fields = [
-    "user",
-    "student_number",
-    "first_name",
-    "middle_name",
-    "last_name",
-    "email",
-    "contact_number",
-    "program",
-    "course",
-    "year_level",
-    "academic_year",
-    "adviser",
-    "is_active",
-]
-    def clean_year_level(self):
-        year = self.cleaned_data["year_level"]
-        if not 1 <= year <= 6:
-            raise forms.ValidationError("Year level must be between 1 and 6.")
-        return year
-
-    def clean(self):
-        data = super().clean()
-        adviser = data.get("adviser")
-        current = self.instance if self.instance and self.instance.pk else None
-        # Don't assign an active student to an inactive adviser or exceed the workload limit.
-        if adviser and data.get("is_active", True):
-            if not adviser.is_active:
-                self.add_error("adviser", "Choose an active adviser.")
-            elif adviser.current_advisee_count >= adviser.max_advisees and (not current or current.adviser_id != adviser.pk):
-                self.add_error("adviser", "This adviser has reached the maximum advisee capacity.")
-        return data
 #exam course
 class CourseForm(forms.ModelForm):
     class Meta:
@@ -53,12 +21,209 @@ class CourseForm(forms.ModelForm):
         }
 #exam course
 
+class StudentForm(forms.ModelForm):
+    # These fields create the student's Django login account.
+    username = forms.CharField(max_length=150)
+    password1 = forms.CharField(
+        label="Temporary Password",
+        widget=forms.PasswordInput
+    )
+    password2 = forms.CharField(
+        label="Confirm Password",
+        widget=forms.PasswordInput
+    )
+
+    class Meta:
+        model = Student
+        fields = [
+            "student_number",
+            "first_name",
+            "middle_name",
+            "last_name",
+            "email",
+            "contact_number",
+            "program",
+            "course",
+            "year_level",
+            "academic_year",
+            "adviser",
+            "is_active",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Don't ask for new login credentials when editing an existing account.
+        if self.instance.pk and self.instance.user_id:
+            self.fields.pop("username")
+            self.fields.pop("password1")
+            self.fields.pop("password2")
+
+    def clean_year_level(self):
+        year = self.cleaned_data["year_level"]
+        if not 1 <= year <= 6:
+            raise forms.ValidationError("Year level must be between 1 and 6.")
+        return year
+
+    def clean(self):
+        data = super().clean()
+
+        adviser = data.get("adviser")
+        current = self.instance if self.instance.pk else None
+
+        if adviser and data.get("is_active", True):
+            if not adviser.is_active:
+                self.add_error("adviser", "Choose an active adviser.")
+            elif adviser.current_advisee_count >= adviser.max_advisees and (
+                not current or current.adviser_id != adviser.pk
+            ):
+                self.add_error(
+                    "adviser",
+                    "This adviser has reached the maximum advisee capacity."
+                )
+
+        if "password1" in self.fields:
+            password1 = data.get("password1")
+            password2 = data.get("password2")
+
+            if password1 and password2 and password1 != password2:
+                self.add_error("password2", "Passwords do not match.")
+
+            if password1:
+                try:
+                    validate_password(password1)
+                except ValidationError as error:
+                    self.add_error("password1", error)
+
+        return data
+
+    @transaction.atomic
+    def save(self, commit=True):
+        student = super().save(commit=False)
+
+        if commit:
+            if not student.user_id:
+                User = get_user_model()
+
+                user = User.objects.create_user(
+                    username=self.cleaned_data["username"],
+                    password=self.cleaned_data["password1"],
+                    email=student.email,
+                    first_name=student.first_name,
+                    last_name=student.last_name,
+                )
+
+                group, _ = Group.objects.get_or_create(name="Student")
+                user.groups.add(group)
+                student.user = user
+
+            student.save()
+            self.save_m2m()
+
+        return student
+
 
 class AdviserForm(forms.ModelForm):
+    # These fields create the adviser's Django login account.
+    username = forms.CharField(max_length=150)
+    password1 = forms.CharField(
+        label="Temporary Password",
+        widget=forms.PasswordInput
+    )
+    password2 = forms.CharField(
+        label="Confirm Password",
+        widget=forms.PasswordInput
+    )
+
     class Meta:
         model = Adviser
-        fields = ["user", "faculty_id", "first_name", "last_name", "department", "program",
-                  "email", "contact_number", "specialization", "max_advisees", "is_active"]
+        fields = [
+            "faculty_id",
+            "first_name",
+            "last_name",
+            "department",
+            "program",
+            "email",
+            "contact_number",
+            "specialization",
+            "max_advisees",
+            "is_active",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.instance.pk and self.instance.user_id:
+            self.fields.pop("username")
+            self.fields.pop("password1")
+            self.fields.pop("password2")
+
+    def clean(self):
+        data = super().clean()
+
+        if "password1" in self.fields:
+            password1 = data.get("password1")
+            password2 = data.get("password2")
+
+            if password1 and password2 and password1 != password2:
+                self.add_error("password2", "Passwords do not match.")
+
+            if password1:
+                try:
+                    validate_password(password1)
+                except ValidationError as error:
+                    self.add_error("password1", error)
+
+        return data
+
+    @transaction.atomic
+    def save(self, commit=True):
+        adviser = super().save(commit=False)
+
+        if commit:
+            if not adviser.user_id:
+                User = get_user_model()
+
+                user = User.objects.create_user(
+                    username=self.cleaned_data["username"],
+                    password=self.cleaned_data["password1"],
+                    email=adviser.email,
+                    first_name=adviser.first_name,
+                    last_name=adviser.last_name,
+                )
+
+                group, _ = Group.objects.get_or_create(name="Adviser")
+                user.groups.add(group)
+                adviser.user = user
+
+            adviser.save()
+            self.save_m2m()
+
+        return adviser
+
+# Forms for self-profile management
+class StudentSelfProfileForm(forms.ModelForm):
+    class Meta:
+        model = Student
+        fields = [
+            "first_name",
+            "middle_name",
+            "last_name",
+            "email",
+            "contact_number",
+        ]
+
+
+class AdviserSelfProfileForm(forms.ModelForm):
+    class Meta:
+        model = Adviser
+        fields = [
+            "first_name",
+            "last_name",
+            "email",
+            "contact_number",
+            "specialization",
+        ]
 
 
 class ThesisTopicForm(forms.ModelForm):
