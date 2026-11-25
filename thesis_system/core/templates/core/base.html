@@ -292,7 +292,19 @@
     <div class="header-inner">
         <a class="brand" href="{% url 'home' %}">Thesis Management System</a>
         <div class="header-account">
-            <span>Signed in as <strong>{{ request.user.username }}</strong></span>
+           <span>
+                Signed in as <strong>{{ request.user.username }}</strong>
+
+                {% if request.user.is_superuser %}
+                    <strong class="role-badge">Administrator</strong>
+                {% elif request.user.groups.all %}
+                    {% for group in request.user.groups.all %}
+                        {% if group.name == "Administrator" or group.name == "Adviser" or group.name == "Student" %}
+                            <strong class="role-badge">{{ group.name }}</strong>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </span>
             <button class="menu-toggle" id="menu-toggle" type="button" aria-controls="site-menu" aria-expanded="false" aria-label="Open navigation menu">
                 <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                     <path d="M4 6h16"></path>

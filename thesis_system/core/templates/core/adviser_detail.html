@@ -1,7 +1,43 @@
 {% extends "core/base.html" %}
 {% block title %}Adviser Profile | Thesis Management System{% endblock %}
 {% block content %}
-<div class="header-top" style="margin-bottom:18px"><div><h1>{{ adviser.first_name }} {{ adviser.last_name }}</h1><p class="page-intro">Adviser specialization and workload.</p></div><div class="actions">{% if can_edit %}<a class="button" href="{% url 'adviser_edit' adviser.pk %}">Edit adviser</a>{% endif %}<a class="button secondary" href="{% url 'adviser_list' %}">Back to list</a></div></div>
+
+<div class="header-top" style="margin-bottom:18px">
+    <div>
+        <h1>{{ adviser.first_name }} {{ adviser.last_name }}</h1>
+        <p class="page-intro">Adviser specialization and workload.</p>
+    </div>
+
+    <div class="actions">
+
+        {% if request.user == adviser.user %}
+            <a class="button" href="{% url 'my_profile_edit' %}">
+                Edit My Profile
+            </a>
+
+            {% if adviser.is_active %}
+                <form method="POST" action="{% url 'my_account_deactivate' %}">
+                    {% csrf_token %}
+                    <button class="button danger" type="submit"
+                        onclick="return confirm('Deactivate your account?')">
+                        Deactivate My Account
+                    </button>
+                </form>
+            {% endif %}
+        {% endif %}
+
+        {% if can_edit %}
+            <a class="button" href="{% url 'adviser_edit' adviser.pk %}">
+                Edit Adviser
+            </a>
+        {% endif %}
+
+        <a class="button secondary" href="{% url 'adviser_list' %}">
+            Back to list
+        </a>
+
+    </div>
+</div>
 <div class="grid">
     <div class="metric"><span>Current active advisees</span><strong>{{ adviser.current_advisee_count }}</strong></div>
     <div class="metric"><span>Maximum advisees</span><strong>{{ adviser.max_advisees }}</strong></div>
